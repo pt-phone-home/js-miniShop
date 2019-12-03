@@ -65,12 +65,21 @@ class ShoppingCart extends Component {
     updatedItems.push(product);
     this.cartItems = updatedItems;
   }
+
+  orderProducts() {
+    console.log("Ordering");
+    console.log(this.items);
+  }
   render() {
     const cartEl = this.createRootElement("section", "cart");
     cartEl.innerHTML = `
             <h2>Total: \$ ${0} </h2>
             <button>Order Now! </button>
         `;
+    const orderBtn = cartEl.querySelector("button");
+    orderBtn.addEventListener("click", () => {
+      this.orderProducts();
+    });
     this.totalOutput = cartEl.querySelector("h2");
   }
 }
@@ -105,15 +114,15 @@ class ProductItem extends Component {
 }
 
 class ProductList extends Component {
-  products = [];
+  #products = [];
   constructor(renderHookId) {
-    super(renderHookId);
+    super(renderHookId, false);
     this.render();
     this.fetchProducts();
   }
 
   fetchProducts() {
-    this.products = [
+    this.#products = [
       new Product(
         "Pillow",
         "https://www.pyrenex.com/home/2051-large_default/pyrenex-cushion-natural-feathers-duck.jpg",
@@ -132,7 +141,7 @@ class ProductList extends Component {
   }
 
   renderProducts() {
-    for (const prod of this.products) {
+    for (const prod of this.#products) {
       new ProductItem(prod, "prod-list");
     }
   }
@@ -142,7 +151,7 @@ class ProductList extends Component {
       new ElementAttribute("id", "prod-list"),
     ]);
 
-    if (this.products && this.products.lenght > 0) {
+    if (this.#products && this.#products.lenght > 0) {
       this.renderProducts();
     }
   }
