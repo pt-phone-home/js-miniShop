@@ -15,9 +15,14 @@ class ElementAttribute {
 }
 
 class Component {
-  constructor(renderHookId) {
+  constructor(renderHookId, shouldRender = true) {
     this.hookId = renderHookId;
+    if (shouldRender === true) {
+      this.render();
+    }
   }
+
+  render() {}
   createRootElement(tag, cssClasses, attributes) {
     const rootElement = document.createElement(tag);
     if (cssClasses) {
@@ -26,7 +31,7 @@ class Component {
 
     if (attributes && attributes.length > 0) {
       for (const attr of attributes) {
-        rootElement.setAttributes(attr.name, attr.value);
+        rootElement.setAttribute(attr.name, attr.value);
       }
     }
     document.getElementById(this.hookId).append(rootElement);
@@ -70,9 +75,11 @@ class ShoppingCart extends Component {
   }
 }
 
-class ProductItem {
-  constructor(product) {
+class ProductItem extends Component {
+  constructor(product, renderHookId) {
+    super(renderHookId, false);
     this.product = product;
+    this.render();
   }
 
   addToCart() {
@@ -80,8 +87,7 @@ class ProductItem {
   }
 
   render() {
-    const prodEl = document.createElement("li");
-    prodEl.className = "product-item";
+    const prodEl = this.createRootElement("list-item", "product-item");
     prodEl.innerHTML = `
         <div>
             <img src="${this.product.imageUrl}" alt="${this.product.title}">
@@ -95,54 +101,68 @@ class ProductItem {
       `;
     const addCartButton = prodEl.querySelector("button");
     addCartButton.addEventListener("click", this.addToCart.bind(this));
-    return prodEl;
   }
 }
 
-class ProductList {
-  products = [
-    new Product(
-      "Pillow",
-      "https://www.pyrenex.com/home/2051-large_default/pyrenex-cushion-natural-feathers-duck.jpg",
-      "A soft Pillow",
-      19.99,
-    ),
-    new Product(
-      "A Carpet",
-      "https://cdn20.pamono.com/p/s/4/8/482920_f2r70mwwd2/antique-wool-carpet.jpg",
-      "A carpet you might like",
-      89.99,
-    ),
-  ];
-  constructor() {}
-  render() {
-    const prodList = document.createElement("ul");
-    prodList.className = "product-list";
+class ProductList extends Component {
+  products = [];
+  constructor(renderHookId) {
+    super(renderHookId);
+    this.render();
+    this.fetchProducts();
+  }
+
+  fetchProducts() {
+    this.products = [
+      new Product(
+        "Pillow",
+        "https://www.pyrenex.com/home/2051-large_default/pyrenex-cushion-natural-feathers-duck.jpg",
+        "A soft Pillow",
+        19.99,
+      ),
+      new Product(
+        "A Carpet",
+        "https://cdn20.pamono.com/p/s/4/8/482920_f2r70mwwd2/antique-wool-carpet.jpg",
+        "A carpet you might like",
+        89.99,
+      ),
+    ];
+
+    this.renderProducts();
+  }
+
+  renderProducts() {
     for (const prod of this.products) {
-      const productItem = new ProductItem(prod);
-      const prodEl = productItem.render();
-      prodList.append(prodEl);
+      new ProductItem(prod, "prod-list");
     }
-    return prodList;
+  }
+
+  render() {
+    const prodList = this.createRootElement("ul", "product-list", [
+      new ElementAttribute("id", "prod-list"),
+    ]);
+
+    if (this.products && this.products.lenght > 0) {
+      this.renderProducts();
+    }
   }
 }
 
-class Shop {
+class Shop extends Component {
+  constructor() {
+    super();
+  }
   render() {
-    const renderHook = document.getElementById("app");
     this.cart = new ShoppingCart("app");
-    this.cart.render();
-    const productList = new ProductList();
-    const prodListEl = productList.render();
-    renderHook.append(prodListEl);
+    new ProductList("app");
   }
 }
 
 class App {
   static cart;
+
   static init() {
     const shop = new Shop();
-    shop.render();
     this.cart = shop.cart;
   }
 
